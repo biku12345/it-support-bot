@@ -1,0 +1,1 @@
+To reset your VPN password: Go to IT portal at vpn.company.com. Click forgot password. Enter your employee email. Check inbox for reset link.

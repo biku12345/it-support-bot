@@ -1,0 +1,30 @@
+# Environment — NEVER commit real keys
+.env
+.env.local
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+
+# ChromaDB data — runtime artifact, not code
+data/
+
+# Virtual env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+.dockerignore
