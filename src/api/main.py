@@ -1,9 +1,10 @@
+import os
 import time
 import uuid
 from contextlib import asynccontextmanager
 
 import redis as redis_client
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -24,6 +25,7 @@ from src.utils.logger import configure_logging, get_logger
 configure_logging(settings.log_level)
 log = get_logger(__name__)
 START_TIME = time.time()
+UPLOAD_DIR = "/uploads"
 
 # Rate limiter — 10 req/min per IP
 limiter = Limiter(key_func=get_remote_address)
@@ -166,3 +168,48 @@ async def health_check() -> HealthResponse:
         components=components,
         uptime_seconds=round(time.time() - START_TIME, 2),
     )
+
+
+@app.post("/upload", tags=["Operations"])
+async def upload_document(file: UploadFile = File(...)):
+    """Upload a PDF/DOCX/TXT and ingest into knowledge base."""
+    import shutil
+
+    # Validate file type
+    allowed = {".pdf", ".docx", ".txt"}
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type '{ext}' not supported. Allowed: {allowed}"
+        )
+
+    # Save to persistent volume
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = f"{UPLOAD_DIR}/{file.filename}"
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    log.info("File uploaded", filename=file.filename)
+
+    # Ingest immediately
+    from src.retrieval.ingest import ingest_file
+    result = ingest_file(file_path, force_reingest=True)
+
+    return {
+        "filename": file.filename,
+        "status": "ingested" if not result.errors else "failed",
+        "chunks_created": result.chunks_created,
+        "errors": result.errors,
+    }
+
+
+@app.get("/documents", tags=["Operations"])
+async def list_documents():
+    """List all uploaded documents and KB stats."""
+    stats = get_collection_stats()
+    files = os.listdir(UPLOAD_DIR) if os.path.exists(UPLOAD_DIR) else []
+    return {
+        "uploaded_files": files,
+        "total_chunks_in_kb": stats.get("document_count", 0),
+    }
