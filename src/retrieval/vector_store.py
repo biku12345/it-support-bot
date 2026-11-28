@@ -19,11 +19,11 @@ def get_embeddings():
     )
 
 def get_vector_store() -> Chroma:
-    os.makedirs(settings.chroma_persist_dir, exist_ok=True)
+    os.makedirs("/tmp/chroma", exist_ok=True)
     return Chroma(
         collection_name="it_support_kb",
         embedding_function=get_embeddings(),
-        persist_directory=settings.chroma_persist_dir,
+        persist_directory="/tmp/chroma",
     )
 
 def add_documents(documents: list[Document]) -> int:
