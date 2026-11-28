@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     tavily_api_key: str = Field(..., description="Tavily Search key")
     groq_api_key: str = Field(..., description="Groq API key")
     vector_store: str = Field("chroma")
-    chroma_persist_dir: str = Field("/tmp/chroma")
+    chroma_persist_dir: str = Field("/chromadb")
     redis_url: str = Field("redis://localhost:6379")
     redis_ttl_seconds: int = Field(3600, ge=60)
     aws_region: str = Field("ap-south-1")

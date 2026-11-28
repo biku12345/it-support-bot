@@ -25,7 +25,7 @@ from src.utils.logger import configure_logging, get_logger
 configure_logging(settings.log_level)
 log = get_logger(__name__)
 START_TIME = time.time()
-UPLOAD_DIR = "/tmp/uploads"
+UPLOAD_DIR = "/chromadb/uploads"
 
 # Rate limiter — 10 req/min per IP
 limiter = Limiter(key_func=get_remote_address)
